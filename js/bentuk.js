@@ -1,49 +1,22 @@
-// Import Firebase functions
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-analytics.js";
 import kueData from "./kue.json";
 import plastikData from "./plastik.json";
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyDwrvHIIh4R0UEN_MKFuaWJkCFPnVtUovY",
-    authDomain: "mira-plastik.firebaseapp.com",
-    databaseURL: "https://mira-plastik-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "mira-plastik",
-    storageBucket: "mira-plastik.firebasestorage.app",
-    messagingSenderId: "687440670790",
-    appId: "1:687440670790:web:c6d571beaa1e47d0861a47",
-    measurementId: "G-5SYRXTFSX9"
-};
+let localKueData = kueData; // Data Kue
+let localPlastikData = plastikData; // Data Plastik
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
+// Fetch data from local files and populate the tables
+fetchDataFromLocal();
 
-let kueData; // Data Kue
-let plastikData; // Data Plastik
-
-// Fetch data from Firestore
-fetchDataFromFirestore();
-
-async function fetchDataFromFirestore() {
+function fetchDataFromLocal() {
     try {
-        const kueCollection = collection(db, "Kue");
-        const plastikCollection = collection(db, "Plastik");
-
-        const kueSnapshot = await getDocs(kueCollection);
-        const plastikSnapshot = await getDocs(plastikCollection);
-
-        kueData = { Kue: kueSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) };
-        plastikData = { Plastik: plastikSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) };
-
-        generateItemRows(kueData.Kue, "kueBody");
-        generateItemRows(plastikData.Plastik, "plastikBody");
+        // Populate tables
+        generateItemRows(localKueData.Kue, "kueBody");
+        generateItemRows(localPlastikData.Plastik, "plastikBody");
         enableEditing();
+
+        console.log("Data berhasil dimuat dari local file.");
     } catch (error) {
-        console.error("Error fetching data from Firestore:", error);
+        console.error("Error fetching data from local storage:", error);
         alert("Gagal memuat data. Silakan coba lagi nanti.");
     }
 }
@@ -51,6 +24,8 @@ async function fetchDataFromFirestore() {
 // Generate table rows
 function generateItemRows(data, tableId) {
     const tbody = document.getElementById(tableId);
+    tbody.innerHTML = ""; // Clear the table body
+
     data.forEach(group => {
         const groupRow = document.createElement("tr");
         groupRow.classList.add("table-subtitle");
@@ -82,22 +57,22 @@ function enableEditing() {
             const newValue = prompt("Edit Value:", cell.innerText);
             if (newValue !== null) {
                 cell.innerText = newValue;
-                updateDataInFirestore(cell, newValue); // Update changes in Firestore
+                updateLocalData(cell, newValue); // Update changes in local data
             }
         });
     });
 }
 
-// Update data in Firestore
-async function updateDataInFirestore(cell, newValue) {
+// Update data in local storage
+function updateLocalData(cell, newValue) {
     try {
         const row = cell.closest('tr');
         const tableId = row.closest('table').id;
         const itemIndex = Array.from(row.parentElement.children).indexOf(row) - 1;
 
         if (tableId === "plastikBody") {
-            const groupIndex = Math.floor(itemIndex / plastikData.Plastik[0].items.length);
-            const group = plastikData.Plastik[groupIndex];
+            const groupIndex = Math.floor(itemIndex / localPlastikData.Plastik[0].items.length);
+            const group = localPlastikData.Plastik[groupIndex];
             const item = group.items[itemIndex % group.items.length];
 
             if (cell.cellIndex === 4) item.harga_dus = newValue;
@@ -108,11 +83,10 @@ async function updateDataInFirestore(cell, newValue) {
             if (cell.cellIndex === 9) item.harga_500_gram = newValue;
             if (cell.cellIndex === 10) item.harga_250_gram = newValue;
 
-            const groupRef = doc(db, "Plastik", group.id);
-            await updateDoc(groupRef, { items: group.items });
+            saveToLocalStorage("Plastik", localPlastikData);
         } else {
-            const groupIndex = Math.floor(itemIndex / kueData.Kue[0].items.length);
-            const group = kueData.Kue[groupIndex];
+            const groupIndex = Math.floor(itemIndex / localKueData.Kue[0].items.length);
+            const group = localKueData.Kue[groupIndex];
             const item = group.items[itemIndex % group.items.length];
 
             if (cell.cellIndex === 4) item.harga_dus = newValue;
@@ -120,11 +94,30 @@ async function updateDataInFirestore(cell, newValue) {
             if (cell.cellIndex === 6) item.harga_500_gram = newValue;
             if (cell.cellIndex === 7) item.harga_250_gram = newValue;
 
-            const groupRef = doc(db, "Kue", group.id);
-            await updateDoc(groupRef, { items: group.items });
+            saveToLocalStorage("Kue", localKueData);
         }
     } catch (error) {
-        console.error("Error updating data in Firestore:", error);
+        console.error("Error updating data locally:", error);
         alert("Gagal memperbarui data. Silakan coba lagi.");
     }
 }
+
+// Save data to localStorage
+function saveToLocalStorage(category, data) {
+    localStorage.setItem(category, JSON.stringify(data));
+    console.log(`${category} data has been saved to localStorage.`);
+}
+
+// Load data from localStorage
+function loadFromLocalStorage() {
+    const kueData = JSON.parse(localStorage.getItem("Kue"));
+    const plastikData = JSON.parse(localStorage.getItem("Plastik"));
+
+    if (kueData) localKueData = kueData;
+    if (plastikData) localPlastikData = plastikData;
+
+    fetchDataFromLocal();
+}
+
+// Call this function when the page loads
+loadFromLocalStorage();
