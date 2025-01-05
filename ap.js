@@ -1,6 +1,6 @@
-const GITHUB_TOKEN = "your_github_personal_access_token";
-const REPO_OWNER = "your_github_username";
-const REPO_NAME = "your_repo_name";
+const GITHUB_TOKEN = "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";
+const REPO_OWNER = "Missav-vip";
+const REPO_NAME = "v";
 
 async function updateGitHubFile(type, updatedData) {
     const filePath = type === "Kue" ? "scc/k/kue.json" : "css/p/plastik.json";
