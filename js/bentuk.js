@@ -1,6 +1,6 @@
 async function fetchData() {
-    const kueResponse = await fetch('k.json');
-    const plastikResponse = await fetch('p.json');
+    const kueResponse = await fetch('css/k.json');
+    const plastikResponse = await fetch('css/p.json');
     
     const kueData = await kueResponse.json();
     const plastikData = await plastikResponse.json();
