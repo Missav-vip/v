@@ -1,30 +1,29 @@
-// Firebase konfigurasi
+// Import Firebase functions
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
-import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    updateDoc
-} from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-analytics.js";
 
+// Firebase Configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDwrvHIIh4R0UEN_MKFuaWJkCFPnVtUovY",
+    authDomain: "mira-plastik.firebaseapp.com",
+    databaseURL: "https://mira-plastik-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "mira-plastik",
+    storageBucket: "mira-plastik.firebasestorage.app",
+    messagingSenderId: "687440670790",
+    appId: "1:687440670790:web:c6d571beaa1e47d0861a47",
+    measurementId: "G-5SYRXTFSX9"
 };
 
-// Inisialisasi Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
 let kueData; // Data Kue
 let plastikData; // Data Plastik
 
-// Ambil data dari Firestore
+// Fetch data from Firestore
 fetchDataFromFirestore();
 
 async function fetchDataFromFirestore() {
@@ -47,7 +46,7 @@ async function fetchDataFromFirestore() {
     }
 }
 
-// Fungsi untuk menghasilkan baris item dalam tabel
+// Generate table rows
 function generateItemRows(data, tableId) {
     const tbody = document.getElementById(tableId);
     data.forEach(group => {
@@ -74,20 +73,20 @@ function generateItemRows(data, tableId) {
     });
 }
 
-// Fungsi untuk mengaktifkan edit di setiap sel yang dapat diedit
+// Enable editing for editable cells
 function enableEditing() {
     document.querySelectorAll(".editable").forEach(cell => {
         cell.addEventListener("click", function () {
             const newValue = prompt("Edit Value:", cell.innerText);
             if (newValue !== null) {
                 cell.innerText = newValue;
-                updateDataInFirestore(cell, newValue); // Simpan perubahan ke Firestore
+                updateDataInFirestore(cell, newValue); // Update changes in Firestore
             }
         });
     });
 }
 
-// Fungsi untuk memperbarui data di Firestore
+// Update data in Firestore
 async function updateDataInFirestore(cell, newValue) {
     try {
         const row = cell.closest('tr');
